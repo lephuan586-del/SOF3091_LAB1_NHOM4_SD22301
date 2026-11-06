@@ -61,5 +61,74 @@ Phần A - Bảng locator
 | **Tên sản phẩm "Sauce Labs Backpack"** | `#item_4_title_link` | 1 | `//div[@data-test='inventory-item-name' and text()='Sauce Labs Backpack']` | 1 | `#item_4_title_link` | Phần tử có sẵn `id` duy nhất giúp truy vấn trực tiếp và đạt hiệu năng cao nhất theo đúng thứ tự ưu tiên; XPath ở Locator 2 cũng rất tốt khi cần định danh nghiệp vụ bằng text. |
 | **Giá của sản phẩm "Sauce Labs Backpack"** | `.inventory_item:has(#item_4_title_link) .inventory_item_price` | 1 | `//div[text()='Sauce Labs Backpack']/ancestor::div[@data-test='inventory-item']//div[@data-test='inventory-item-price']` | 1 | `//div[text()='Sauce Labs Backpack']/ancestor::div[@data-test='inventory-item']//div[@data-test='inventory-item-price']` | Giá không có `id` hay `data-test` độc nhất; XPath tương đối này liên kết trực tiếp giá với tên sản phẩm trong cùng thẻ hàng, đảm bảo tính độc nhất 1 of 1 và hoạt động ổn định kể cả khi trạng thái giỏ hàng thay đổi. |
 
-screenshot/<img width="1366" height="729" alt="image" src="https://github.com/user-attachments/assets/58a51b42-c36a-4e97-a2e4-46350b6be134" />
+## Phần D — Dùng AI để tối ưu locator
+
+**Phần tử chọn:** giá của sản phẩm Sauce Labs Backpack
+
+**AI sử dụng:** Claude (Anthropic)
+
+**outerHTML đã gửi cho AI:**
+```html
+<div class="inventory_item" data-test="inventory-item">
+  <div class="inventory_item_img">...</div>
+  <div class="inventory_item_description">
+    <div class="inventory_item_label">
+      <a href="#" id="item_4_title_link" data-test="item-4-title-link">
+        <div class="inventory_item_name " data-test="inventory-item-name">Sauce Labs Backpack</div>
+      </a>
+      <div class="inventory_item_desc" data-test="inventory-item-desc">carry.allTheThings() with the sleek, streamlined Sly Pack...</div>
+    </div>
+    <div class="pricebar">
+      <div class="inventory_item_price" data-test="inventory-item-price">$29.99</div>
+      <button class="btn btn_primary btn_small btn_inventory " id="add-to-cart-sauce-labs-backpack" data-test="add-to-cart-sauce-labs-backpack">Add to cart</button>
+    </div>
+  </div>
+</div>
+```
+
+**Prompt đã dùng:**
+```
+Tôi đang viết Selenium WebDriver bằng C# trên trang saucedemo.com.
+Đây là outerHTML của khung sản phẩm trên trang inventory:
+
+<outerHTML ở trên>
+
+Tôi muốn lấy GIÁ của sản phẩm "Sauce Labs Backpack".
+Hãy đề xuất locator bền vững nhất cho phần tử giá này.
+Yêu cầu:
+- Không dùng XPath tuyệt đối (bắt đầu bằng /html/body/...)
+- Locator phải mô tả danh tính của phần tử, không mô tả đường đi
+- Ưu tiên id, data-test, rồi CSS Selector, sau cùng mới XPath tương đối
+- Locator chỉ được khớp đúng 1 phần tử trên trang
+Hãy giải thích ngắn gọn vì sao locator đó bền.
+```
+
+**Câu trả lời của AI:**
+```
+Thẻ giá không có id riêng, và data-test="inventory-item-price" lặp lại ở cả 6 sản phẩm
+nên không dùng một mình được (sẽ khớp 6 phần tử). Cần gắn giá với danh tính sản phẩm.
+
+Đề xuất 1 (XPath tương đối, nên chọn):
+//div[@data-test='inventory-item'][.//div[@data-test='inventory-item-name' and normalize-space()='Sauce Labs Backpack']]//div[@data-test='inventory-item-price']
+
+Lý do bền: tìm khung sản phẩm theo TÊN rồi mới lấy giá bên trong, nên không phụ thuộc
+thứ tự sản phẩm hay vị trí trong DOM. Dùng data-test thay cho class nên ít bị vỡ khi đổi giao diện.
+
+Đề xuất 2 (CSS Selector):
+.pricebar:has(#add-to-cart-sauce-labs-backpack) [data-test='inventory-item-price']
+
+Lý do: id của nút Add to cart chứa tên sản phẩm (sauce-labs-backpack) nên là duy nhất;
+chọn thanh giá chứa nút đó rồi lấy giá. Lưu ý :has() chỉ chạy tốt trên trình duyệt hiện đại như Chrome.
+
+Không nên dùng: .inventory_item_price hoặc [data-test='inventory-item-price'] một mình
+(khớp 6 phần tử), và div:nth-child(1) (phụ thuộc vị trí).
+```
+
+**Kiểm chứng bằng Ctrl+F:** cả 2 locator đều cho kết quả `1 of 1`
+
+![Ctrl+F locator AI](<img width="1366" height="768" alt="image" src="https://github.com/user-attachments/assets/3d6ff249-5bf8-48d8-90de-38d7245576c7" />
+)
+
+**Nhận xét của tôi:**
+Cả hai locator AI đề xuất khi kiểm tra bằng Ctrl+F đều ra `1 of 1`, không dùng XPath tuyệt đối và mô tả danh tính theo tên sản phẩm nên không phụ thuộc thứ tự danh sách. AI đúng khi nhận ra `data-test="inventory-item-price"` lặp lại ở 6 sản phẩm nên không thể dùng một mình. Locator CSS dùng `:has()` gọn hơn nhưng phụ thuộc trình duyệt hỗ trợ, nên tôi vẫn ưu tiên XPath ở đề xuất 1 cho ổn định. Dù AI đúng, tôi vẫn phải tự kiểm chứng vì AI không nhìn thấy trang thật.
 
