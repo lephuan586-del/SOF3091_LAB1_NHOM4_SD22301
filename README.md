@@ -126,7 +126,8 @@ Không nên dùng: .inventory_item_price hoặc [data-test='inventory-item-price
 
 **Kiểm chứng bằng Ctrl+F:** cả 2 locator đều cho kết quả `1 of 1`
 
-![Ctrl+F locator AI](screenshots/D-ai-locator-ctrlf.png)
+![Test Passed](<img width="1366" height="728" alt="image" src="https://github.com/user-attachments/assets/818a7fc8-c836-466e-b085-77b18391c00e" />
+)
 
 **Nhận xét của tôi:**
 Cả hai locator AI đề xuất khi kiểm tra bằng Ctrl+F đều ra `1 of 1`, không dùng XPath tuyệt đối và mô tả danh tính theo tên sản phẩm nên không phụ thuộc thứ tự danh sách. AI đúng khi nhận ra `data-test="inventory-item-price"` lặp lại ở 6 sản phẩm nên không thể dùng một mình. Locator CSS dùng `:has()` gọn hơn nhưng phụ thuộc trình duyệt hỗ trợ, nên tôi vẫn ưu tiên XPath ở đề xuất 1 cho ổn định. Dù AI đúng, tôi vẫn phải tự kiểm chứng vì AI không nhìn thấy trang thật.
