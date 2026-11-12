@@ -138,63 +138,8 @@ Cả hai locator AI đề xuất khi kiểm tra bằng Ctrl+F đều ra `1 of 1`
 
 # Lab 4 - OOP và Page Object Model (POM)
 
-## Cấu trúc thư mục Pages/ và Tests/
-
-```
-FirstTest/
-├── Pages/
-│   ├── BasePage.cs               # Lớp cơ sở trừu tượng: quản lý driver, wait (10s), các hàm tìm kiếm có/không Explicit Wait
-│   ├── DynamicLoadingPage.cs     # Đại diện trang Dynamic Loading 2 (The Internet)
-│   ├── ExamplePage.cs            # Đại diện trang example.com
-│   ├── IframePage.cs             # Đại diện trang iFrame TinyMCE: tự động chuyển ngữ cảnh trong try/finally
-│   ├── InventoryPage.cs          # Đại diện trang kho hàng Swag Labs: kiểm tra hiển thị, sắp xếp, lấy danh sách giá/sản phẩm
-│   ├── JavaScriptAlertsPage.cs   # Đại diện trang JavaScript Alerts: tương tác alert/confirm/prompt và lấy kết quả
-│   └── LoginPage.cs              # Đại diện trang đăng nhập Swag Labs: xử lý luồng đăng nhập thành công và không thành công
-└── Tests/
-    ├── AlertIframeTests.cs       # Kiểm thử tương tác Alerts và iFrame (Lab 3) qua Page Object
-    ├── BaseTest.cs               # Lớp cơ sở kiểm thử: khởi tạo ChromeDriver, ImplicitWait = 0, tự động chụp ảnh khi Test Failed
-    ├── DemoFailTests.cs          # Ca kiểm thử cố ý rớt (Category "Demo") để thẩm định chức năng chụp ảnh khi thất bại
-    ├── LoginTests.cs             # Ca kiểm thử đăng nhập thuận/nghịch và thu thập dữ liệu sản phẩm (Lab 2) qua Page Object
-    ├── SortTests.cs              # Ca kiểm thử sắp xếp giá tăng dần dùng method chaining (Lab 3) qua Page Object
-    ├── UnitTest1.cs              # Ca kiểm thử mở trang example.com và đọc tiêu đề (Lab 1) qua Page Object
-    └── WaitTests.cs              # Ca kiểm thử đối chứng cơ chế chờ Explicit Wait (Lab 3): PartA_KhongWait_Rot và PartA_CoWait_Pass
-```
-
-## Cách chạy test
-
-- **Chạy toàn bộ các ca kiểm thử chính thức (loại trừ nhóm Demo):**
-  ```powershell
-  dotnet test --filter "Category!=Demo" --logger "console;verbosity=normal"
-  ```
-
-- **Chạy các ca kiểm thử minh họa lỗi và chụp màn hình (nhóm Demo):**
-  ```powershell
-  dotnet test --filter "Category=Demo" --logger "console;verbosity=normal"
-  ```
-
-## Ảnh minh chứng
-
-- Kết quả kiểm thử TRƯỚC refactor: `screenshots/Lab4_TRUOC_refactor.png`
-- Kết quả kiểm thử SAU refactor: `screenshots/Lab4_SAU_refactor.png`
-
-## Phần E – Thẩm định AI
-
-*(sẽ được điền sau)*
-
-### Prompt đã dùng
-
-*(sẽ được điền sau)*
-
-### Kết quả AI trả về
-
-*(sẽ được điền sau)*
-
-### Chỗ AI làm sai / tiêu chí đã kiểm
-
-*(sẽ được điền sau)*
-
-
-# Lab 4 - OOP và Page Object Model (POM)
+- Sinh viên: Lê Phú An - Mã SV: TB02149
+- Môn: SOF3091
 
 ## Cấu trúc thư mục Pages/ và Tests/
 
