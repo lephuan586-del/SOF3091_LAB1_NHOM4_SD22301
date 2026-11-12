@@ -1,8 +1,8 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
-namespace FirstTests;
+namespace FirstTests.Tests;
 
 public class LoginTests
 {
@@ -56,7 +56,7 @@ public class LoginTests
         Login("standard_user", "secret_sauce");
 
         var productItems = driver.FindElements(By.CssSelector("[data-test='inventory-item']"));
-        Assert.That(productItems.Count, Is.EqualTo(6), "Danh sách phải có đủ 6 sản phẩm.");
+        Assert.That(productItems.Count, Is.EqualTo(6), "Danh sÃ¡ch pháº£i cÃ³ Ä‘á»§ 6 sáº£n pháº©m.");
 
         var productNames = new List<string>();
 
@@ -68,14 +68,14 @@ public class LoginTests
             string name = nameElement.Text;
             string price = priceElement.Text;
 
-            TestContext.Out.WriteLine($"Sản phẩm: {name} | Giá: {price}");
+            TestContext.Out.WriteLine($"Sáº£n pháº©m: {name} | GiÃ¡: {price}");
 
-            Assert.That(string.IsNullOrWhiteSpace(name), Is.False, "Tên sản phẩm không được rỗng hoặc chỉ chứa khoảng trắng.");
-            Assert.That(price, Does.StartWith("$"), $"Giá của sản phẩm '{name}' phải bắt đầu bằng '$'.");
+            Assert.That(string.IsNullOrWhiteSpace(name), Is.False, "TÃªn sáº£n pháº©m khÃ´ng Ä‘Æ°á»£c rá»—ng hoáº·c chá»‰ chá»©a khoáº£ng tráº¯ng.");
+            Assert.That(price, Does.StartWith("$"), $"GiÃ¡ cá»§a sáº£n pháº©m '{name}' pháº£i báº¯t Ä‘áº§u báº±ng '$'.");
 
             productNames.Add(name);
         }
 
-        Assert.That(productNames, Does.Contain("Sauce Labs Backpack"), "Danh sách sản phẩm phải chứa 'Sauce Labs Backpack'.");
+        Assert.That(productNames, Does.Contain("Sauce Labs Backpack"), "Danh sÃ¡ch sáº£n pháº©m pháº£i chá»©a 'Sauce Labs Backpack'.");
     }
 }
