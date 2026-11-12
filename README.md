@@ -186,12 +186,340 @@ FirstTest/
 
 ### Prompt đã dùng
 
-*(sẽ được điền sau)*
+Hãy refactor file test Selenium C# (NUnit) dưới đây sang Page Object Model. Quy ước bắt buộc:
+1. Có BasePage (abstract) chứa driver, WebDriverWait (10 giây) và hàm Tim(By) tìm phần tử kèm Explicit Wait. Mọi Page class kế thừa BasePage, không tự khai báo lại driver/wait.
+2. Locator là private readonly By; hành vi nghiệp vụ là public.
+3. Tên hành vi theo việc người dùng làm được (DangNhap, SapXep, LayDanhSachGia), không đặt theo thẻ HTML.
+4. Hành vi chuyển trang trả về Page mới (return new TrangMoi(driver)); hành vi ở lại trang trả về this.
+5. KHÔNG có Assert trong Page Object; Assert chỉ nằm trong file test.
+6. Không Page Object nào trả về IWebElement.
+7. File test sau refactor không được còn chữ "By".
+8. Giữ nguyên hành vi và mọi Assert của test gốc. Không dùng Thread.Sleep.
+9. Namespace: FirstTests.Pages cho Pages/, FirstTests.Tests cho Tests/.
+Trả về đầy đủ: BasePage.cs, các Page class, và file test đã refactor.
+
+Code gốc: [using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+
+namespace FirstTests;
+
+public class LoginTests
+{
+    private IWebDriver driver;
+
+    [SetUp]
+    public void Setup()
+    {
+        driver = new ChromeDriver();
+        driver.Manage().Window.Maximize();
+        driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
+        driver.Navigate().GoToUrl("https://www.saucedemo.com");
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        driver.Quit();
+        driver.Dispose();
+    }
+
+    public void Login(string username, string password)
+    {
+        driver.FindElement(By.Id("user-name")).SendKeys(username);
+        driver.FindElement(By.Id("password")).SendKeys(password);
+        driver.FindElement(By.Id("login-button")).Click();
+    }
+
+    [Test]
+    public void Login_ValidUser_GoesToInventoryPage()
+    {
+        Login("standard_user", "secret_sauce");
+        Assert.That(driver.Url, Does.Contain("inventory.html"));
+    }
+
+    [Test]
+    public void Login_LockedOutUser_ShowsErrorMessage()
+    {
+        Login("locked_out_user", "secret_sauce");
+
+        var errorMessage = driver.FindElement(By.CssSelector("[data-test='error']"));
+
+        Assert.That(errorMessage.Displayed, Is.True);
+        Assert.That(errorMessage.Text, Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
+        Assert.That(driver.Url, Does.Not.Contain("inventory.html"));
+    }
+
+    [Test]
+    public void CollectProducts_PrintsAndAssertsDetails()
+    {
+        Login("standard_user", "secret_sauce");
+
+        var productItems = driver.FindElements(By.CssSelector("[data-test='inventory-item']"));
+        Assert.That(productItems.Count, Is.EqualTo(6), "Danh sách phải có đủ 6 sản phẩm.");
+
+        var productNames = new List<string>();
+
+        foreach (var item in productItems)
+        {
+            var nameElement = item.FindElement(By.CssSelector("[data-test='inventory-item-name']"));
+            var priceElement = item.FindElement(By.CssSelector("[data-test='inventory-item-price']"));
+
+            string name = nameElement.Text;
+            string price = priceElement.Text;
+
+            TestContext.Out.WriteLine($"Sản phẩm: {name} | Giá: {price}");
+
+            Assert.That(string.IsNullOrWhiteSpace(name), Is.False, "Tên sản phẩm không được rỗng hoặc chỉ chứa khoảng trắng.");
+            Assert.That(price, Does.StartWith("$"), $"Giá của sản phẩm '{name}' phải bắt đầu bằng '$'.");
+
+            productNames.Add(name);
+        }
+
+        Assert.That(productNames, Does.Contain("Sauce Labs Backpack"), "Danh sách sản phẩm phải chứa 'Sauce Labs Backpack'.");
+    }
+}]
 
 ### Kết quả AI trả về
 
-*(sẽ được điền sau)*
+AI trả về 5 file: Pages/BasePage.cs, Pages/LoginPage.cs, Pages/InventoryPage.cs, Pages/SanPham.cs (lớp dữ liệu nhỏ chứa tên và giá), và Tests/LoginTests.cs đã refactor. Bên dưới là nguyên văn code AI trả về.
+
+<details> <summary>Pages/BasePage.cs</summary>
+
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+
+namespace FirstTests.Pages;
+
+public abstract class BasePage
+{
+    protected readonly IWebDriver driver;
+    protected readonly WebDriverWait wait;
+
+    protected BasePage(IWebDriver driver)
+    {
+        this.driver = driver;
+        wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+    }
+
+    // Tìm 1 phần tử, kèm Explicit Wait (chờ tối đa 10 giây)
+    protected IWebElement Tim(By locator)
+        => wait.Until(d => d.FindElement(locator));
+
+    // Tìm nhiều phần tử, chờ đến khi có ít nhất 1 phần tử
+    protected IReadOnlyCollection<IWebElement> TimTatCa(By locator)
+        => wait.Until(d =>
+        {
+            var danhSach = d.FindElements(locator);
+            return danhSach.Count > 0 ? danhSach : null;
+        });
+
+    public string LayUrlHienTai() => driver.Url;
+}
+
+</details> <details> <summary>Pages/LoginPage.cs</summary>
+
+using OpenQA.Selenium;
+
+namespace FirstTests.Pages;
+
+public class LoginPage : BasePage
+{
+    private const string DuongDan = "https://www.saucedemo.com";
+
+    private readonly By oTenDangNhap = By.Id("user-name");
+    private readonly By oMatKhau = By.Id("password");
+    private readonly By nutDangNhap = By.Id("login-button");
+    private readonly By khungThongBaoLoi = By.CssSelector("[data-test='error']");
+
+    public LoginPage(IWebDriver driver) : base(driver) { }
+
+    public LoginPage MoTrang()
+    {
+        driver.Navigate().GoToUrl(DuongDan);
+        return this;
+    }
+
+    // Đăng nhập thành công -> chuyển sang trang sản phẩm
+    public InventoryPage DangNhap(string tk, string mk)
+    {
+        NhapThongTinVaBam(tk, mk);
+        return new InventoryPage(driver);
+    }
+
+    // Đăng nhập thất bại -> ở lại trang đăng nhập
+    public LoginPage DangNhapKhongThanhCong(string tk, string mk)
+    {
+        NhapThongTinVaBam(tk, mk);
+        return this;
+    }
+
+    public bool ThongBaoLoiDaHienThi() => Tim(khungThongBaoLoi).Displayed;
+
+    public string LayThongBaoLoi() => Tim(khungThongBaoLoi).Text;
+
+    private void NhapThongTinVaBam(string tk, string mk)
+    {
+        Tim(oTenDangNhap).SendKeys(tk);
+        Tim(oMatKhau).SendKeys(mk);
+        Tim(nutDangNhap).Click();
+    }
+}
+
+</details> <details> <summary>Pages/InventoryPage.cs</summary>
+
+using System.Globalization;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
+
+namespace FirstTests.Pages;
+
+public class InventoryPage : BasePage
+{
+    private readonly By moiSanPham = By.CssSelector("[data-test='inventory-item']");
+    private readonly By tenSanPham = By.CssSelector("[data-test='inventory-item-name']");
+    private readonly By giaSanPham = By.CssSelector("[data-test='inventory-item-price']");
+    private readonly By oChonSapXep = By.CssSelector("[data-test='product-sort-container']");
+
+    public InventoryPage(IWebDriver driver) : base(driver) { }
+
+    public bool DaHienThi()
+    {
+        try
+        {
+            return TimTatCa(moiSanPham).Count > 0;
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
+    }
+
+    public InventoryPage SapXep(string value)
+    {
+        new SelectElement(Tim(oChonSapXep)).SelectByValue(value);
+        return this;
+    }
+
+    public List<decimal> LayDanhSachGia()
+    {
+        return TimTatCa(giaSanPham)
+            .Select(e => decimal.Parse(e.Text.Replace("$", ""), CultureInfo.InvariantCulture))
+            .ToList();
+    }
+
+    public List<SanPham> LayDanhSachSanPham()
+    {
+        var ketQua = new List<SanPham>();
+        foreach (var o in TimTatCa(moiSanPham))
+        {
+            ketQua.Add(new SanPham(
+                o.FindElement(tenSanPham).Text,
+                o.FindElement(giaSanPham).Text));
+        }
+        return ketQua;
+    }
+}
+
+</details> <details> <summary>Pages/SanPham.cs</summary>
+
+namespace FirstTests.Pages;
+
+// Dữ liệu 1 sản phẩm hiển thị trên trang (chỉ chứa chữ, không chứa phần tử web)
+public record SanPham(string Ten, string Gia);
+
+</details> <details> <summary>Tests/LoginTests.cs</summary>
+
+using FirstTests.Pages;
+using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+
+namespace FirstTests.Tests;
+
+public class LoginTests
+{
+    private IWebDriver driver;
+    private LoginPage loginPage;
+
+    [SetUp]
+    public void Setup()
+    {
+        driver = new ChromeDriver();
+        driver.Manage().Window.Maximize();
+        loginPage = new LoginPage(driver).MoTrang();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        driver.Quit();
+        driver.Dispose();
+    }
+
+    [Test]
+    public void Login_ValidUser_GoesToInventoryPage()
+    {
+        var inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+
+        Assert.That(inventoryPage.LayUrlHienTai(), Does.Contain("inventory.html"));
+    }
+
+    [Test]
+    public void Login_LockedOutUser_ShowsErrorMessage()
+    {
+        loginPage.DangNhapKhongThanhCong("locked_out_user", "secret_sauce");
+
+        Assert.That(loginPage.ThongBaoLoiDaHienThi(), Is.True);
+        Assert.That(loginPage.LayThongBaoLoi(), Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
+        Assert.That(loginPage.LayUrlHienTai(), Does.Not.Contain("inventory.html"));
+    }
+
+    [Test]
+    public void CollectProducts_PrintsAndAssertsDetails()
+    {
+        var inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+
+        var sanPhams = inventoryPage.LayDanhSachSanPham();
+        Assert.That(sanPhams.Count, Is.EqualTo(6), "Danh sách phải có đủ 6 sản phẩm.");
+
+        var productNames = new List<string>();
+
+        foreach (var sanPham in sanPhams)
+        {
+            TestContext.Out.WriteLine($"Sản phẩm: {sanPham.Ten} | Giá: {sanPham.Gia}");
+
+            Assert.That(string.IsNullOrWhiteSpace(sanPham.Ten), Is.False, "Tên sản phẩm không được rỗng hoặc chỉ chứa khoảng trắng.");
+            Assert.That(sanPham.Gia, Does.StartWith("$"), $"Giá của sản phẩm '{sanPham.Ten}' phải bắt đầu bằng '$'.");
+
+            productNames.Add(sanPham.Ten);
+        }
+
+        Assert.That(productNames, Does.Contain("Sauce Labs Backpack"), "Danh sách sản phẩm phải chứa 'Sauce Labs Backpack'.");
+    }
+}
+
+
 
 ### Chỗ AI làm sai / tiêu chí đã kiểm
 
-*(sẽ được điền sau)*
+Kết luận: bản AI trả về đáp ứng cả 9 quy ước trong prompt. Tôi không tìm thấy chỗ vi phạm quy ước nào. Tuy nhiên có 3 điểm AI tự quyết hoặc làm chưa tốt, tôi nêu ở phần sau.
+
+Các tiêu chí đã kiểm và cách kiểm:
+
+#	Quy ước	Cách kiểm	Kết quả
+1	BasePage abstract có driver, WebDriverWait 10 giây, hàm Tim; Page kế thừa và không khai báo lại	Đọc code; tìm IWebDriver driver; và WebDriverWait ngoài BasePage.cs	Đạt, không Page nào khai báo lại
+2	Locator private readonly By, hành vi public	Đọc từng Page; tìm mọi dòng khai báo By trong Pages/	Đạt, mọi locator đều private readonly
+3	Tên hành vi theo việc người dùng làm	Đọc tên hàm: DangNhap, SapXep, LayDanhSachGia, LayThongBaoLoi, DaHienThi	Đạt
+4	Chuyển trang trả về Page mới, ở lại trang trả về this	Đọc return của từng hàm	Đạt: DangNhap trả về new InventoryPage(driver); SapXep, DangNhapKhongThanhCong, MoTrang trả về this
+5	Không có Assert trong Page	Tìm "Assert" trong Pages/	0 kết quả
+6	Không Page nào trả về IWebElement	Tìm "IWebElement" trong Pages/	2 lần xuất hiện, đều là hàm protected trong BasePage (Tim, TimTatCa); không có member public nào trả về IWebElement
+7	File test không còn chữ "By"	Tìm "By" trong Tests/ (cả phân biệt và không phân biệt hoa thường)	0 kết quả
+8	Giữ nguyên Assert và hành vi; không Thread.Sleep	Đếm Assert.That: bản gốc 8, bản refactor 8, cùng nội dung; tìm Thread.Sleep và ImplicitWait	Đạt, không có Thread.Sleep
+9	Namespace đúng thư mục	Đọc dòng namespace	Đạt: FirstTests.Pages và FirstTests.Tests
+
+Chỗ AI làm chưa tốt / tự quyết ngoài prompt:
+
+ThongBaoLoiDaHienThi() trả về bool nhưng không bao giờ trả false. Hàm gọi Tim(...), nên nếu thông báo lỗi không xuất hiện thì ném WebDriverTimeoutException sau 10 giây thay vì trả về false. Test vẫn rớt đúng (giống bản gốc, FindElement cũng ném lỗi khi không thấy), nhưng thông báo rớt là lỗi timeout chứ không phải kết quả Assert. Trong khi đó InventoryPage.DaHienThi() lại bắt exception và trả về false. Hai hàm cùng kiểu bool mà cách xử lý không nhất quán.
+AI tự thêm DangNhapKhongThanhCong và lớp SanPham, không có trong prompt. Quy ước 4 yêu cầu DangNhap trả về InventoryPage, nhưng test đăng nhập sai (locked_out_user) ở lại trang đăng nhập; nếu chỉ dùng DangNhap thì không gọi được LayThongBaoLoi() trên LoginPage. AI giải quyết bằng một hàm riêng trả về this. Hướng giải quyết hợp lý nhưng là quyết định của AI, người dùng phải tự hiểu và xác nhận.
+AI tự bỏ ImplicitWait = 5 giây ở Setup của test gốc. Prompt không yêu cầu việc này. Lý do hợp lý là không nên trộn Implicit và Explicit Wait, và Tim/TimTatCa đã có Explicit Wait thay thế (TimTatCa chờ đến khi có ít nhất 1 phần tử, giống cách FindElements của bản gốc đã chờ nhờ Implicit Wait). Nhưng đây vẫn là một thay đổi cơ chế chờ so với bản gốc, nên cần chạy lại test để chắc kết quả không đổi.
