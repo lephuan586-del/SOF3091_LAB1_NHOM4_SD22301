@@ -1,81 +1,62 @@
-﻿using NUnit.Framework;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+using FirstTests.Pages;
+using NUnit.Framework;
 
 namespace FirstTests.Tests;
 
-public class LoginTests
+[TestFixture]
+public class LoginTests : BaseTest
 {
-    private IWebDriver driver;
+    private LoginPage loginPage = null!;
 
     [SetUp]
-    public void Setup()
+    public override void Setup()
     {
-        driver = new ChromeDriver();
-        driver.Manage().Window.Maximize();
-        driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(5);
-        driver.Navigate().GoToUrl("https://www.saucedemo.com");
-    }
-
-    [TearDown]
-    public void TearDown()
-    {
-        driver.Quit();
-        driver.Dispose();
-    }
-
-    public void Login(string username, string password)
-    {
-        driver.FindElement(By.Id("user-name")).SendKeys(username);
-        driver.FindElement(By.Id("password")).SendKeys(password);
-        driver.FindElement(By.Id("login-button")).Click();
+        base.Setup();
+        loginPage = new LoginPage(driver);
+        loginPage.MoTrang();
     }
 
     [Test]
     public void Login_ValidUser_GoesToInventoryPage()
     {
-        Login("standard_user", "secret_sauce");
+        var inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+
         Assert.That(driver.Url, Does.Contain("inventory.html"));
     }
 
     [Test]
     public void Login_LockedOutUser_ShowsErrorMessage()
     {
-        Login("locked_out_user", "secret_sauce");
+        loginPage.DangNhapKhongThanhCong("locked_out_user", "secret_sauce");
 
-        var errorMessage = driver.FindElement(By.CssSelector("[data-test='error']"));
-
-        Assert.That(errorMessage.Displayed, Is.True);
-        Assert.That(errorMessage.Text, Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
+        Assert.That(loginPage.CoThongBaoLoiHienThi(), Is.True);
+        Assert.That(loginPage.LayThongBaoLoi(), Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
         Assert.That(driver.Url, Does.Not.Contain("inventory.html"));
     }
 
     [Test]
     public void CollectProducts_PrintsAndAssertsDetails()
     {
-        Login("standard_user", "secret_sauce");
+        var inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
 
-        var productItems = driver.FindElements(By.CssSelector("[data-test='inventory-item']"));
-        Assert.That(productItems.Count, Is.EqualTo(6), "Danh sÃ¡ch pháº£i cÃ³ Ä‘á»§ 6 sáº£n pháº©m.");
+        var danhSachSanPham = inventoryPage.LayDanhSachSanPham();
+        Assert.That(danhSachSanPham.Count, Is.EqualTo(6), "Danh sách phải có đủ 6 sản phẩm.");
 
         var productNames = new List<string>();
 
-        foreach (var item in productItems)
+        foreach (var item in danhSachSanPham)
         {
-            var nameElement = item.FindElement(By.CssSelector("[data-test='inventory-item-name']"));
-            var priceElement = item.FindElement(By.CssSelector("[data-test='inventory-item-price']"));
+            string name = item.Ten;
+            string price = item.Gia;
 
-            string name = nameElement.Text;
-            string price = priceElement.Text;
+            TestContext.Out.WriteLine($"Sản phẩm: {name} | Giá: {price}");
 
-            TestContext.Out.WriteLine($"Sáº£n pháº©m: {name} | GiÃ¡: {price}");
-
-            Assert.That(string.IsNullOrWhiteSpace(name), Is.False, "TÃªn sáº£n pháº©m khÃ´ng Ä‘Æ°á»£c rá»—ng hoáº·c chá»‰ chá»©a khoáº£ng tráº¯ng.");
-            Assert.That(price, Does.StartWith("$"), $"GiÃ¡ cá»§a sáº£n pháº©m '{name}' pháº£i báº¯t Ä‘áº§u báº±ng '$'.");
+            Assert.That(string.IsNullOrWhiteSpace(name), Is.False, "Tên sản phẩm không được rỗng hoặc chỉ chứa khoảng trắng.");
+            Assert.That(price, Does.StartWith("$"), $"Giá của sản phẩm '{name}' phải bắt đầu bằng '$'.");
 
             productNames.Add(name);
         }
 
-        Assert.That(productNames, Does.Contain("Sauce Labs Backpack"), "Danh sÃ¡ch sáº£n pháº©m pháº£i chá»©a 'Sauce Labs Backpack'.");
+        Assert.That(productNames, Does.Contain("Sauce Labs Backpack"), "Danh sách sản phẩm phải chứa 'Sauce Labs Backpack'.");
     }
 }
