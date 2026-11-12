@@ -1,4 +1,4 @@
-﻿# Lab 1 - Nhập môn kiểm thử tự động & Thiết lập môi trường
+# Lab 1 - Nhập môn kiểm thử tự động & Thiết lập môi trường
 
 - Sinh viên: Nguyễn Quốc Tuấn - Mã SV: TB02181
 - Môn: SOF3091
@@ -134,212 +134,119 @@ Screenshot/<img width="1366" height="728" alt="image" src="https://github.com/us
 **Nhận xét của tôi:**
 Cả hai locator AI đề xuất khi kiểm tra bằng Ctrl+F đều ra `1 of 1`, không dùng XPath tuyệt đối và mô tả danh tính theo tên sản phẩm nên không phụ thuộc thứ tự danh sách. AI đúng khi nhận ra `data-test="inventory-item-price"` lặp lại ở 6 sản phẩm nên không thể dùng một mình. Locator CSS dùng `:has()` gọn hơn nhưng phụ thuộc trình duyệt hỗ trợ, nên tôi vẫn ưu tiên XPath ở đề xuất 1 cho ổn định. Dù AI đúng, tôi vẫn phải tự kiểm chứng vì AI không nhìn thấy trang thật.
 
-# Lab 3 - Xử lý các tình huống thực tế phức tạp
 
-- Sinh viên: Lê Phú An - Mã SV: TB02149
-- Môn: SOF3091
 
-### Phần E – AI chẩn đoán flaky test
+# Lab 4 - OOP và Page Object Model (POM)
 
-#### 1. Test được chọn
+## Cấu trúc thư mục Pages/ và Tests/
 
-- **Tên test:** A1 – `PartA_KhongWait_Rot`
-- **Trang kiểm thử:** `https://the-internet.herokuapp.com/dynamic_loading/2`
-- **Tần suất rớt đo được:** **10/10 lần** (tỷ lệ rớt **100%**)
-- **Điều kiện chạy kiểm thử thực tế:**
-  - **Hệ điều hành:** Windows 10 Pro (Microsoft Windows NT 10.0.19045.0, 64-bit)
-  - **Google Chrome:** 156.0.8078.80
-  - **ChromeDriver:** Phiên bản 156.0.8078.80 (được Selenium Manager tự động tải khớp với Chrome)
-  - **Thư viện kiểm thử:** `Selenium.WebDriver` 4.52.0, `Selenium.Support` 4.52.0, `NUnit` 4.3.2, `NUnit3TestAdapter` 5.0.0, `Microsoft.NET.Test.Sdk` 17.14.0
-  - **Môi trường runtime:** .NET SDK 10.0.402 (TargetFramework: `net10.0`)
-  - **Chế độ hiển thị:** Mở trực tiếp trình duyệt Chrome có giao diện (Non-headless, cờ `--start-maximized`)
-  - **Mạng:** Kết nối Internet thông thường, độ trễ ổn định
-
-- **Code nguyên văn của test:**
-
-```csharp
-[Test]
-[Category("Demo")]
-public void PartA_KhongWait_Rot()
-{
-    // 1. Điều hướng đến trang Dynamic Loading 2
-    driver.Navigate().GoToUrl("https://the-internet.herokuapp.com/dynamic_loading/2");
-
-    // 2. Bấm nút Start để kích hoạt tải dữ liệu bằng JavaScript
-    driver.FindElement(By.CssSelector("#start button")).Click();
-
-    // 3. KHÔNG CHỜ: Tìm ngay lập tức phần tử #finish khi DOM chưa kịp render -> Gây lỗi NoSuchElementException
-    var finishElement = driver.FindElement(By.Id("finish"));
-
-    // 4. Kiểm tra nội dung văn bản
-    Assert.That(finishElement.Text, Does.Contain("Hello World!"));
-}
+```
+FirstTest/
+├── Pages/
+│   ├── BasePage.cs               # Lớp cơ sở trừu tượng: quản lý driver, wait (10s), các hàm tìm kiếm có/không Explicit Wait
+│   ├── DynamicLoadingPage.cs     # Đại diện trang Dynamic Loading 2 (The Internet)
+│   ├── ExamplePage.cs            # Đại diện trang example.com
+│   ├── IframePage.cs             # Đại diện trang iFrame TinyMCE: tự động chuyển ngữ cảnh trong try/finally
+│   ├── InventoryPage.cs          # Đại diện trang kho hàng Swag Labs: kiểm tra hiển thị, sắp xếp, lấy danh sách giá/sản phẩm
+│   ├── JavaScriptAlertsPage.cs   # Đại diện trang JavaScript Alerts: tương tác alert/confirm/prompt và lấy kết quả
+│   └── LoginPage.cs              # Đại diện trang đăng nhập Swag Labs: xử lý luồng đăng nhập thành công và không thành công
+└── Tests/
+    ├── AlertIframeTests.cs       # Kiểm thử tương tác Alerts và iFrame (Lab 3) qua Page Object
+    ├── BaseTest.cs               # Lớp cơ sở kiểm thử: khởi tạo ChromeDriver, ImplicitWait = 0, tự động chụp ảnh khi Test Failed
+    ├── DemoFailTests.cs          # Ca kiểm thử cố ý rớt (Category "Demo") để thẩm định chức năng chụp ảnh khi thất bại
+    ├── LoginTests.cs             # Ca kiểm thử đăng nhập thuận/nghịch và thu thập dữ liệu sản phẩm (Lab 2) qua Page Object
+    ├── SortTests.cs              # Ca kiểm thử sắp xếp giá tăng dần dùng method chaining (Lab 3) qua Page Object
+    ├── UnitTest1.cs              # Ca kiểm thử mở trang example.com và đọc tiêu đề (Lab 1) qua Page Object
+    └── WaitTests.cs              # Ca kiểm thử đối chứng cơ chế chờ Explicit Wait (Lab 3): PartA_KhongWait_Rot và PartA_CoWait_Pass
 ```
 
-- **Thông báo lỗi nguyên văn từ terminal:**
+## Cách chạy test
 
-```text
-  Failed PartA_KhongWait_Rot [4 s]
-  Error Message:
-   OpenQA.Selenium.NoSuchElementException : no such element: Unable to locate element: {"method":"css selector","selector":"#finish"}
-  (Session info: chrome=156.0.8078.80); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
-  Stack Trace:
-     at OpenQA.Selenium.WebDriver.UnpackAndThrowOnError(Response errorResponse, String commandToExecute)
-   at OpenQA.Selenium.WebDriver.ExecuteAsync(String driverCommandToExecute, Dictionary`2 parameters)
-   at OpenQA.Selenium.WebDriver.Execute(String driverCommandToExecute, Dictionary`2 parameters)
-   at OpenQA.Selenium.WebDriver.FindElement(String mechanism, String value)
-   at OpenQA.Selenium.By.<.ctor>b__6_0(ISearchContext context)
-   at OpenQA.Selenium.By.FindElement(ISearchContext context)
-   at OpenQA.Selenium.WebDriver.FindElement(By by)
-   at FirstTests.WaitTests.PartA_KhongWait_Rot() in C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\FirstTest\WaitTests.cs:line 20
-   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
-   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+- **Chạy toàn bộ các ca kiểm thử chính thức (loại trừ nhóm Demo):**
+  ```powershell
+  dotnet test --filter "Category!=Demo" --logger "console;verbosity=normal"
+  ```
 
-  Standard Output Messages:
- Đã chụp ảnh lỗi và lưu tại: C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\screenshots\PartA_KhongWait_Rot.png
+- **Chạy các ca kiểm thử minh họa lỗi và chụp màn hình (nhóm Demo):**
+  ```powershell
+  dotnet test --filter "Category=Demo" --logger "console;verbosity=normal"
+  ```
+
+## Ảnh minh chứng
+
+- Kết quả kiểm thử TRƯỚC refactor: `screenshots/Lab4_TRUOC_refactor.png`
+- Kết quả kiểm thử SAU refactor: `screenshots/Lab4_SAU_refactor.png`
+
+## Phần E – Thẩm định AI
+
+*(sẽ được điền sau)*
+
+### Prompt đã dùng
+
+*(sẽ được điền sau)*
+
+### Kết quả AI trả về
+
+*(sẽ được điền sau)*
+
+### Chỗ AI làm sai / tiêu chí đã kiểm
+
+*(sẽ được điền sau)*
+
+
+# Lab 4 - OOP và Page Object Model (POM)
+
+## Cấu trúc thư mục Pages/ và Tests/
+
+```
+FirstTest/
+├── Pages/
+│   ├── BasePage.cs               # Lớp cơ sở trừu tượng: quản lý driver, wait (10s), các hàm tìm kiếm có/không Explicit Wait
+│   ├── DynamicLoadingPage.cs     # Đại diện trang Dynamic Loading 2 (The Internet)
+│   ├── ExamplePage.cs            # Đại diện trang example.com
+│   ├── IframePage.cs             # Đại diện trang iFrame TinyMCE: tự động chuyển ngữ cảnh trong try/finally
+│   ├── InventoryPage.cs          # Đại diện trang kho hàng Swag Labs: kiểm tra hiển thị, sắp xếp, lấy danh sách giá/sản phẩm
+│   ├── JavaScriptAlertsPage.cs   # Đại diện trang JavaScript Alerts: tương tác alert/confirm/prompt và lấy kết quả
+│   └── LoginPage.cs              # Đại diện trang đăng nhập Swag Labs: xử lý luồng đăng nhập thành công và không thành công
+└── Tests/
+    ├── AlertIframeTests.cs       # Kiểm thử tương tác Alerts và iFrame (Lab 3) qua Page Object
+    ├── BaseTest.cs               # Lớp cơ sở kiểm thử: khởi tạo ChromeDriver, ImplicitWait = 0, tự động chụp ảnh khi Test Failed
+    ├── DemoFailTests.cs          # Ca kiểm thử cố ý rớt (Category "Demo") để thẩm định chức năng chụp ảnh khi thất bại
+    ├── LoginTests.cs             # Ca kiểm thử đăng nhập thuận/nghịch và thu thập dữ liệu sản phẩm (Lab 2) qua Page Object
+    ├── SortTests.cs              # Ca kiểm thử sắp xếp giá tăng dần dùng method chaining (Lab 3) qua Page Object
+    ├── UnitTest1.cs              # Ca kiểm thử mở trang example.com và đọc tiêu đề (Lab 1) qua Page Object
+    └── WaitTests.cs              # Ca kiểm thử đối chứng cơ chế chờ Explicit Wait (Lab 3): PartA_KhongWait_Rot và PartA_CoWait_Pass
 ```
 
----
+## Cách chạy test
 
-#### 2. Prompt đã dùng
+- **Chạy toàn bộ các ca kiểm thử chính thức (loại trừ nhóm Demo):**
+  ```powershell
+  dotnet test --filter "Category!=Demo" --logger "console;verbosity=normal"
+  ```
 
-*(Prompt này do Antigravity soạn, vì chưa có bản ghi prompt gốc)*
+- **Chạy các ca kiểm thử minh họa lỗi và chụp màn hình (nhóm Demo):**
+  ```powershell
+  dotnet test --filter "Category=Demo" --logger "console;verbosity=normal"
+  ```
 
-```text
-Tôi đang viết bài kiểm thử tự động bằng C# (.NET 10, NUnit 4, Selenium WebDriver 4.52) trên Windows 10 với Google Chrome 156.0.8078.80 (mở trình duyệt thông thường có giao diện, không bật headless).
-Đoạn mã test của tôi trên trang https://the-internet.herokuapp.com/dynamic_loading/2 như sau:
+## Ảnh minh chứng
 
-[Test]
-public void PartA_KhongWait_Rot()
-{
-    driver.Navigate().GoToUrl("https://the-internet.herokuapp.com/dynamic_loading/2");
-    driver.FindElement(By.CssSelector("#start button")).Click();
-    var finishElement = driver.FindElement(By.Id("finish"));
-    Assert.That(finishElement.Text, Does.Contain("Hello World!"));
-}
+- Kết quả kiểm thử TRƯỚC refactor: `screenshots/Lab4_TRUOC_refactor.png`
+- Kết quả kiểm thử SAU refactor: `screenshots/Lab4_SAU_refactor.png`
 
-Khi tôi chạy 10 lần liên tiếp, cả 10 lần đều rớt (tần suất 10/10) với lỗi nguyên văn:
-"OpenQA.Selenium.NoSuchElementException : no such element: Unable to locate element: {"method":"css selector","selector":"#finish"}"
+## Phần E – Thẩm định AI
 
-Hãy phân tích và liệt kê các nguyên nhân có thể gây ra lỗi này.
-```
+*(sẽ được điền sau)*
 
----
+### Prompt đã dùng
 
-#### 3. Các nguyên nhân AI đề xuất
+*(sẽ được điền sau)*
 
-*(Mục này do Antigravity tạo với tư cách AI chẩn đoán, tổng hợp các phản hồi tiêu biểu thường gặp)*
+### Kết quả AI trả về
 
-1. Phần tử `#finish` được tạo động và chèn vào DOM bằng JavaScript sau khi bấm nút Start, mã test tìm ngay lập tức khi DOM chưa có phần tử nên bị `NoSuchElementException`.
-2. Bộ định vị (locator) `By.Id("finish")` bị sai hoặc phần tử nằm bên trong một thẻ `<iframe>` nên WebDriver không nhìn thấy từ ngữ cảnh trang chính.
-3. Phiên bản giữa Google Chrome và ChromeDriver bị lệch khiến các lệnh `FindElement` hoạt động sai lệch hoặc không gửi được yêu cầu đúng cách.
-4. Cửa sổ trình duyệt chưa được phóng to (`Maximize`) hoặc phần tử nằm ngoài vùng nhìn thấy (viewport) khiến DOM chưa kích hoạt hiển thị phần tử.
-5. Cần dùng lệnh dừng luồng `Thread.Sleep(5000)` hoặc cấu hình `ImplicitWait = TimeSpan.FromSeconds(10)` để WebDriver tự dừng chờ phần tử xuất hiện trước khi gọi `FindElement`.
-6. Thời gian timeout của cơ chế chờ (nếu có cấu hình) đặt quá thấp so với thời gian xử lý thực tế của trang web.
+*(sẽ được điền sau)*
 
----
+### Chỗ AI làm sai / tiêu chí đã kiểm
 
-#### 4. Tự kiểm chứng từng gợi ý
-
-| Gợi ý của AI | Cách kiểm chứng | Kết quả thực tế | Kết luận |
-| :--- | :--- | :--- | :--- |
-| **1. Bất đồng bộ do JavaScript render trễ** | Kiểm tra mã nguồn JS của trang và chạy test `PartA_CoWait_Pass` dùng `WebDriverWait` với lambda `wait.Until(d => d.FindElement(By.Id("finish")))`. | Trang dùng `setTimeout` 5.000 ms để tạo và hiện `#finish`. Khi thêm Explicit Wait, test A2 chạy vượt qua thành công 100% (Passed 10/10 lần). | **Đúng** |
-| **2. Sai locator hoặc phần tử nằm trong iFrame** | Dùng `driver.FindElements(By.TagName("iframe")).Count` để đếm iframe và kiểm tra ID của phần tử sau khi xuất hiện. | Trang có đúng 0 iframe (`Count == 0`). Sau khi tải xong, phần tử mang đúng thuộc tính `id="finish"` và chứa văn bản "Hello World!". | **Sai** |
-| **3. Lệch phiên bản Chrome và ChromeDriver** | Kiểm tra phiên bản Chrome trên máy (`156.0.8078.80`) và kết quả thực thi các test khác trong project. | Selenium Manager tự tải ChromeDriver bản 156 tương thích hoàn toàn. Toàn bộ 10 test khác (bao gồm test A2 có chờ) đều Passed xanh 10/10 lần. | **Sai** |
-| **4. Kích thước cửa sổ trình duyệt (Maximize / Viewport)** | Chạy thử nghiệm ở kích thước cửa sổ thu nhỏ (800x600) có Explicit Wait. | Phần tử `#finish` vẫn được tìm thấy và Assert Pass bình thường kể cả khi cửa sổ nhỏ; lỗi xảy ra do phần tử chưa tồn tại trong DOM chứ không phải do vị trí hiển thị. | **Không liên quan** |
-| **5. Cần dùng Thread.Sleep hoặc Implicit Wait** | Đo thời gian tải JS thực tế (5.288 ms) và phân tích nguyên lý hoạt động của WebDriver. | `Thread.Sleep` là hard sleep gây lãng phí tài nguyên và làm chậm bộ test; `ImplicitWait` làm ô nhiễm toàn bộ session và không linh hoạt bằng `WebDriverWait`. Cả hai đều vi phạm quy tắc bắt buộc của bài Lab. | **Đúng một phần (về triệu chứng), nhưng sai về giải pháp chuẩn** |
-| **6. Thời gian timeout đặt quá thấp** | Chạy thí nghiệm đo thời gian xuất hiện của `#finish` bằng `Stopwatch`. | Thời gian thực tế đo được để `#finish` xuất hiện là 5.288 ms (~5,3 giây). Mã test A1 hoàn toàn không có wait (thời gian chờ = 0 ms), do đó chắc chắn luôn luôn rớt. | **Đúng một phần** |
-
----
-
-#### 5. Nhận xét
-
-Qua quá trình tự thực nghiệm, tôi nhận thấy gợi ý số 1 của AI là hoàn toàn chính xác vì trang web sử dụng JavaScript để tạo động thẻ `#finish` sau đúng 5 giây, nên việc thiếu Explicit Wait chắc chắn dẫn đến `NoSuchElementException`. Ngược lại, các gợi ý số 2 và số 3 là hoàn toàn sai, bởi vì thí nghiệm đo đạc thực tế cho thấy trang có 0 iframe, locator `#finish` chuẩn xác 100% và ChromeDriver 156 đang đồng bộ hoàn hảo với Chrome. Riêng gợi ý số 5 tuy có thể giải quyết được triệu chứng nhưng lại đề xuất cách làm phản mẫu (dùng `Thread.Sleep`), vi phạm quy chuẩn tự động hóa test hiện đại. Nhờ thực hiện thí nghiệm đo đạc thực tế (đo thời gian xuất hiện là 5.288 ms và chạy test đối chứng A2 có Explicit Wait đạt 10/10 lần Passed), tôi đã xác định được nguyên nhân cốt lõi và kiểm chứng được tính đúng đắn của giải pháp mà không tin theo AI một cách máy móc.
-
-# Bằng chứng kiểm tra độ ổn định và Flaky Test (Lab 3)
-
-## 1. Code nguyên văn của Test A1 và Test A2
-
-```csharp
-[Test]
-[Category("Demo")]
-public void PartA_KhongWait_Rot()
-{
-    // 1. Điều hướng đến trang Dynamic Loading 2
-    driver.Navigate().GoToUrl("https://the-internet.herokuapp.com/dynamic_loading/2");
-
-    // 2. Bấm nút Start để kích hoạt tải dữ liệu bằng JavaScript
-    driver.FindElement(By.CssSelector("#start button")).Click();
-
-    // 3. KHÔNG CHỜ: Tìm ngay lập tức phần tử #finish khi DOM chưa kịp render -> Gây lỗi NoSuchElementException
-    var finishElement = driver.FindElement(By.Id("finish"));
-
-    // 4. Kiểm tra nội dung văn bản
-    Assert.That(finishElement.Text, Does.Contain("Hello World!"));
-}
-
-[Test]
-public void PartA_CoWait_Pass()
-{
-    // 1. Điều hướng đến trang Dynamic Loading 2
-    driver.Navigate().GoToUrl("https://the-internet.herokuapp.com/dynamic_loading/2");
-
-    // 2. Bấm nút Start để kích hoạt tải dữ liệu bằng JavaScript
-    driver.FindElement(By.CssSelector("#start button")).Click();
-
-    // 3. CÓ CHỜ: Dùng WebDriverWait poll liên tục đến khi #finish xuất hiện trong DOM (timeout 10 giây)
-    var finishElement = wait.Until(d => d.FindElement(By.Id("finish")));
-
-    // 4. Kiểm tra nội dung văn bản
-    Assert.That(finishElement.Text, Does.Contain("Hello World!"));
-}
-```
-
----
-
-## 2. Thông báo lỗi nguyên văn của Test A1 (PartA_KhongWait_Rot)
-
-```text
-  Failed PartA_KhongWait_Rot [4 s]
-  Error Message:
-   OpenQA.Selenium.NoSuchElementException : no such element: Unable to locate element: {"method":"css selector","selector":"#finish"}
-  (Session info: chrome=156.0.8078.80); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#nosuchelementexception
-  Stack Trace:
-     at OpenQA.Selenium.WebDriver.UnpackAndThrowOnError(Response errorResponse, String commandToExecute)
-   at OpenQA.Selenium.WebDriver.ExecuteAsync(String driverCommandToExecute, Dictionary`2 parameters)
-   at OpenQA.Selenium.WebDriver.Execute(String driverCommandToExecute, Dictionary`2 parameters)
-   at OpenQA.Selenium.WebDriver.FindElement(String mechanism, String value)
-   at OpenQA.Selenium.By.<.ctor>b__6_0(ISearchContext context)
-   at OpenQA.Selenium.By.FindElement(ISearchContext context)
-   at OpenQA.Selenium.WebDriver.FindElement(By by)
-   at FirstTests.WaitTests.PartA_KhongWait_Rot() in C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\FirstTest\WaitTests.cs:line 20
-   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
-   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
-
-  Standard Output Messages:
- Đã chụp ảnh lỗi và lưu tại: C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\screenshots\PartA_KhongWait_Rot.png
-```
-
----
-
-## 3. Tần suất rớt đo được
-
-- **Test A1 (`PartA_KhongWait_Rot` - Không Wait):**
-  - Chạy lặp 10 lần liên tiếp: **10/10 lần rớt** (tỷ lệ rớt: **100%**).
-  - Nguyên nhân: Phần tử `#finish` do JavaScript tạo ra sau khoảng 5.000 ms (5 giây), trong khi mã nguồn tìm kiếm ngay sau thao tác click mà không có cơ chế chờ (Implicit Wait = 0, không có Explicit Wait).
-
-- **Toàn bộ bộ test không thuộc Demo (`Category!=Demo` - bao gồm A2 CoWait):**
-  - Chạy lặp 10 lần liên tiếp (mỗi lần 10 test: 1 test Lab 1, 3 test Lab 2, 6 test Lab 3): **10/10 lần thành công 100% xanh** (tỷ lệ thành công: **100%**).
-
----
-
-## 4. Điều kiện chạy kiểm thử thực tế
-
-- **Hệ điều hành:** Microsoft Windows NT 10.0.19045.0 (Windows 10 Pro 64-bit)
-- **Trình duyệt Google Chrome:** 156.0.8078.80
-- **ChromeDriver:** Được Selenium Manager tự động tải và đồng bộ theo phiên bản Chrome 156.0.8078.80
-- **Thư viện Selenium:** `Selenium.WebDriver` 4.52.0 & `Selenium.Support` 4.52.0
-- **Test Framework:** `NUnit` 4.3.2, `NUnit3TestAdapter` 5.0.0, `Microsoft.NET.Test.Sdk` 17.14.0
-- **Nền tảng .NET:** .NET SDK 10.0.402, Target Framework: `net10.0`
-- **Chế độ hiển thị (Headless):** Không bật chế độ headless (mở trình duyệt Chrome giao diện đồ họa thông thường với cờ `--start-maximized`)
-- **Mạng:** Kết nối Internet thông thường, độ trễ đến `the-internet.herokuapp.com` ổn định.
+*(sẽ được điền sau)*

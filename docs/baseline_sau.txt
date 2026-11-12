@@ -1,0 +1,35 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  FirstTest -> C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\FirstTest\bin\Debug\net10.0\FirstTest.dll
+Test run for C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\FirstTest\bin\Debug\net10.0\FirstTest.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+NUnit Adapter 5.0.0.0: Test execution started
+Running selected tests in C:\Users\Admin\Downloads\SOF3091_LAB1_NHOM4_SD22301\FirstTest\bin\Debug\net10.0\FirstTest.dll
+   NUnit3TestExecutor discovered 10 of 10 NUnit test cases using Current Discovery mode, Non-Explicit run
+  Passed PartC_JsAlert_AcceptAndAssertResult [6 s]
+  Passed PartC_JsConfirm_DismissAndAssertResult [5 s]
+  Passed PartC_JsPrompt_SendKeysAcceptAndAssertResult [6 s]
+  Passed PartC_TinyMceIframe_WriteTextAndSwitchBack [8 s]
+Sß║ún phß║⌐m: Sauce Labs Backpack | Gi├í: $29.99
+Sß║ún phß║⌐m: Sauce Labs Bike Light | Gi├í: $9.99
+Sß║ún phß║⌐m: Sauce Labs Bolt T-Shirt | Gi├í: $15.99
+Sß║ún phß║⌐m: Sauce Labs Fleece Jacket | Gi├í: $49.99
+Sß║ún phß║⌐m: Sauce Labs Onesie | Gi├í: $7.99
+Sß║ún phß║⌐m: Test.allTheThings() T-Shirt (Red) | Gi├í: $15.99
+
+  Passed CollectProducts_PrintsAndAssertsDetails [4 s]
+  Passed Login_LockedOutUser_ShowsErrorMessage [4 s]
+  Passed Login_ValidUser_GoesToInventoryPage [4 s]
+Danh s├ích gi├í sau khi sß║»p xß║┐p Low to High: 7.99, 9.99, 15.99, 15.99, 29.99, 49.99
+
+  Passed SortProducts_PriceLowToHigh_PricesAreSortedAscending [4 s]
+Ti├¬u ─æß╗ü trang: Example Domain
+
+  Passed OpenExampleSite_TitleIsCorrect [2 s]
+NUnit Adapter 5.0.0.0: Test execution complete
+  Passed PartA_CoWait_Pass [11 s]
+
+Test Run Successful.
+Total tests: 10
+     Passed: 10
+ Total time: 59.5934 Seconds
