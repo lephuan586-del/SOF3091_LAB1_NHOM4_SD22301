@@ -182,7 +182,29 @@ FirstTest/
 
 ## Phần E – Thẩm định AI
 
-*(sẽ được điền sau)*
+**Kết luận:** bản AI trả về đáp ứng cả 9 quy ước trong prompt. Tôi không tìm thấy chỗ vi phạm quy ước nào. Tuy nhiên có 3 điểm AI tự quyết hoặc làm chưa tốt, tôi nêu ở phần sau.
+
+**Các tiêu chí đã kiểm và cách kiểm:**
+
+| # | Quy ước | Cách kiểm | Kết quả |
+|---|---------|-----------|---------|
+| 1 | BasePage abstract có driver, WebDriverWait 10 giây, hàm Tim; Page kế thừa và không khai báo lại | Đọc code; tìm `IWebDriver driver;` và `WebDriverWait` ngoài BasePage.cs | Đạt, không Page nào khai báo lại |
+| 2 | Locator `private readonly By`, hành vi `public` | Đọc từng Page; tìm mọi dòng khai báo `By` trong Pages/ | Đạt, mọi locator đều private readonly |
+| 3 | Tên hành vi theo việc người dùng làm | Đọc tên hàm: DangNhap, SapXep, LayDanhSachGia, LayThongBaoLoi, DaHienThi | Đạt |
+| 4 | Chuyển trang trả về Page mới, ở lại trang trả về this | Đọc return của từng hàm | Đạt: DangNhap trả về `new InventoryPage(driver)`; SapXep, DangNhapKhongThanhCong, MoTrang trả về `this` |
+| 5 | Không có Assert trong Page | Tìm "Assert" trong Pages/ | 0 kết quả |
+| 6 | Không Page nào trả về IWebElement | Tìm "IWebElement" trong Pages/ | 2 lần xuất hiện, đều là hàm `protected` trong BasePage (Tim, TimTatCa); không có member public nào trả về IWebElement |
+| 7 | File test không còn chữ "By" | Tìm "By" trong Tests/ (cả phân biệt và không phân biệt hoa thường) | 0 kết quả |
+| 8 | Giữ nguyên Assert và hành vi; không Thread.Sleep | Đếm `Assert.That`: bản gốc 8, bản refactor 8, cùng nội dung; tìm Thread.Sleep và ImplicitWait | Đạt, không có Thread.Sleep |
+| 9 | Namespace đúng thư mục | Đọc dòng namespace | Đạt: `FirstTests.Pages` và `FirstTests.Tests` |
+
+**Chỗ AI làm chưa tốt / tự quyết ngoài prompt:**
+
+1. **`ThongBaoLoiDaHienThi()` trả về `bool` nhưng không bao giờ trả `false`.** Hàm gọi `Tim(...)`, nên nếu thông báo lỗi không xuất hiện thì ném `WebDriverTimeoutException` sau 10 giây thay vì trả về `false`. Test vẫn rớt đúng (giống bản gốc), nhưng thông báo rớt là lỗi timeout chứ không phải kết quả Assert. Trong khi đó `InventoryPage.DaHienThi()` lại bắt exception và trả về `false`, nên hai hàm cùng kiểu `bool` mà xử lý không nhất quán.
+2. **AI tự thêm `DangNhapKhongThanhCong` và lớp `SanPham`, không có trong prompt.** Quy ước 4 yêu cầu `DangNhap` trả về `InventoryPage`, nhưng test đăng nhập sai ở lại trang đăng nhập nên cần một hàm riêng trả về `this` để gọi `LayThongBaoLoi()`. Hướng giải quyết hợp lý nhưng là quyết định của AI, người dùng phải tự hiểu và xác nhận.
+3. **AI tự bỏ `ImplicitWait = 5 giây` ở `Setup` của test gốc.** Prompt không yêu cầu việc này. Lý do hợp lý là không nên trộn Implicit và Explicit Wait, và `Tim`/`TimTatCa` đã có Explicit Wait thay thế. Nhưng đây vẫn là thay đổi cơ chế chờ so với bản gốc, nên cần chạy lại test để chắc kết quả không đổi.
+
+**Chưa kiểm được ở bước này:** kết quả biên dịch và chạy `dotnet test` của riêng bản AI trả về. [ĐIỀN SAU KHI CHẠY]
 
 ### Prompt đã dùng
 
