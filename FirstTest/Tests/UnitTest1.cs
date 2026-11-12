@@ -1,33 +1,20 @@
-﻿using NUnit.Framework;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
+using FirstTests.Pages;
+using NUnit.Framework;
 
 namespace FirstTests.Tests;
 
-public class Tests
+[TestFixture]
+public class Tests : BaseTest
 {
-    private IWebDriver driver;
-
-    [SetUp]
-    public void Setup()
-    {
-        driver = new ChromeDriver();          // mở Chrome
-    }
-
     [Test]
     public void OpenExampleSite_TitleIsCorrect()
     {
-        driver.Navigate().GoToUrl("https://example.com");   // điều hướng
-        string title = driver.Title;                        // đọc tiêu đề
-        Console.WriteLine("Tiêu đề trang: " + title);       // in tiêu đề
+        var examplePage = new ExamplePage(driver);
+        examplePage.MoTrang();
 
-        Assert.That(title, Is.EqualTo("Example Domain"));   // kiểm tra kết quả
-    }
+        string title = examplePage.LayTieuDeTrang();
+        TestContext.Out.WriteLine("Tiêu đề trang: " + title);
 
-    [TearDown]
-    public void TearDown()
-    {
-        driver.Quit();                        // đóng trình duyệt
-        driver.Dispose();
+        Assert.That(title, Is.EqualTo("Example Domain"));
     }
 }

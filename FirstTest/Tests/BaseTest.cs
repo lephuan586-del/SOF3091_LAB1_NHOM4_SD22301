@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using OpenQA.Selenium;
@@ -15,14 +15,10 @@ public class BaseTest
     [SetUp]
     public virtual void Setup()
     {
-        // Khá»Ÿi táº¡o ChromeDriver
         var options = new ChromeOptions();
         options.AddArgument("--start-maximized");
-        // TuÃ¢n thá»§ quy táº¯c: KhÃ´ng dÃ¹ng Implicit Wait (Ä‘áº·t vá» 0)
         driver = new ChromeDriver(options);
         driver.Manage().Timeouts().ImplicitWait = TimeSpan.Zero;
-
-        // Khá»Ÿi táº¡o WebDriverWait vá»›i timeout 10 giÃ¢y
         wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
     }
 
@@ -31,7 +27,6 @@ public class BaseTest
     {
         try
         {
-            // 1. Chá»‰ chá»¥p áº£nh mÃ n hÃ¬nh khi test tháº¥t báº¡i
             if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
             {
                 TakeScreenshotOnFailure();
@@ -39,11 +34,10 @@ public class BaseTest
         }
         catch (Exception ex)
         {
-            TestContext.Out.WriteLine($"Lá»—i khi chá»¥p áº£nh mÃ n hÃ¬nh: {ex.Message}");
+            TestContext.Out.WriteLine($"Lỗi khi chụp ảnh màn hình: {ex.Message}");
         }
         finally
         {
-            // 3. Sau khi chá»¥p (hoáº·c náº¿u pass) má»›i Ä‘Ã³ng trÃ¬nh duyá»‡t
             if (driver != null)
             {
                 driver.Quit();
@@ -60,8 +54,6 @@ public class BaseTest
         }
 
         var screenshot = screenshotDriver.GetScreenshot();
-
-        // Tá»± dÃ² Ä‘Æ°á»ng lÃªn thÆ° má»¥c gá»‘c cá»§a repo (chá»©a .git hoáº·c .sln/.slnx)
         string repoRoot = FindRepoRoot(TestContext.CurrentContext.TestDirectory);
         string screenshotsDir = Path.Combine(repoRoot, "screenshots");
 
@@ -70,19 +62,15 @@ public class BaseTest
             Directory.CreateDirectory(screenshotsDir);
         }
 
-        // LÃ m sáº¡ch tÃªn ca test Ä‘á»ƒ táº¡o tÃªn file há»£p lá»‡
         string rawTestName = TestContext.CurrentContext.Test.Name;
         string safeTestName = string.Join("_", rawTestName.Split(Path.GetInvalidFileNameChars()));
         safeTestName = Regex.Replace(safeTestName, @"\s+", "_");
 
         string filePath = Path.Combine(screenshotsDir, $"{safeTestName}.png");
+        screenshot.SaveAsFile(filePath);
 
-        // LÆ°u áº£nh mÃ n hÃ¬nh dÆ°á»›i dáº¡ng PNG
-        File.WriteAllBytes(filePath, screenshot.AsByteArray);
-
-        // ÄÃ­nh kÃ¨m áº£nh vÃ o bÃ¡o cÃ¡o test cá»§a NUnit
         TestContext.AddTestAttachment(filePath, $"Screenshot on failure: {safeTestName}");
-        TestContext.Out.WriteLine($"ÄÃ£ chá»¥p áº£nh lá»—i vÃ  lÆ°u táº¡i: {filePath}");
+        TestContext.Out.WriteLine($"Đã chụp ảnh lỗi và lưu tại: {filePath}");
     }
 
     private static string FindRepoRoot(string startDir)
