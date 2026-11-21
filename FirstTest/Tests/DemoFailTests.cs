@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -6,11 +7,13 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class DemoFailTests : BaseTest
 {
+    protected override string StartUrl => Config.TheInternetUrl;
+
     [Test]
     [Category("Demo")]
     public void PartD_CoY_Rot_DeChupAnh()
     {
-        var alertsPage = new JavaScriptAlertsPage(driver);
+        var alertsPage = new JavaScriptAlertsPage(Driver);
         alertsPage.MoTrang().BamNutAlert().ChapNhanAlert();
 
         string ketQua = alertsPage.LayKetQua();

@@ -1,3 +1,4 @@
+using FirstTests.Config;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 
@@ -11,7 +12,8 @@ public abstract class BasePage
     protected BasePage(IWebDriver driver)
     {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+        int timeoutSeconds = ConfigReader.Current.TimeoutSeconds > 0 ? ConfigReader.Current.TimeoutSeconds : 10;
+        this.wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutSeconds));
     }
 
     /// <summary>

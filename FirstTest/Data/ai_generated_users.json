@@ -1,0 +1,62 @@
+[
+  {
+    "Username": "standard_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap thanh cong voi tai khoan tieu chuan"
+  },
+  {
+    "Username": "admin",
+    "Password": "admin123",
+    "ThanhCong": true,
+    "GhiChu": "Tai khoan quan tri vien he thong"
+  },
+  {
+    "Username": "locked_out_user",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Tai khoan bi khoa truy cap"
+  },
+  {
+    "Username": "problem_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Tai khoan gap van de hien thi san pham"
+  },
+  {
+    "Username": "performance_glitch_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Tai khoan bi giat lag hieu nang"
+  },
+  {
+    "Username": "user@example.com",
+    "Password": "password123",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap bang dia chi email tieu chuan"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "wrong_password",
+    "ThanhCong": false,
+    "GhiChu": "Sai mat khau tai khoan hop le"
+  },
+  {
+    "Username": "",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "De trong ten dang nhap"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "",
+    "ThanhCong": false,
+    "GhiChu": "De trong mat khau"
+  },
+  {
+    "Username": "test_user_not_exist",
+    "Password": "test_password",
+    "ThanhCong": false,
+    "GhiChu": "Tai khoan nguoi dung khong ton tai"
+  }
+]

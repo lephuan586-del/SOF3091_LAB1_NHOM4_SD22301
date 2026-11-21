@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -6,10 +7,12 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class Tests : BaseTest
 {
+    protected override string StartUrl => Config.ExampleUrl;
+
     [Test]
     public void OpenExampleSite_TitleIsCorrect()
     {
-        var examplePage = new ExamplePage(driver);
+        var examplePage = new ExamplePage(Driver);
         examplePage.MoTrang();
 
         string title = examplePage.LayTieuDeTrang();

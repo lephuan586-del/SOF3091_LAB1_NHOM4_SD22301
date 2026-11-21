@@ -20,11 +20,34 @@ public class InventoryPage : BasePage
     }
 
     /// <summary>
-    /// Kiểm tra trang danh sách sản phẩm đã hiển thị thành công.
+    /// Kiem tra trang danh sach san pham da hien thi thanh cong hay chua.
+    /// Ham dung WebDriverWait voi timeout ngan (~3 giay) va FindElements (so nhieu),
+    /// duoc boc try/catch de tra ve false thay vi nem WebDriverTimeoutException.
+    /// Ly do: Trong cac ca test dang nhap that bai (ca am tinh hoac ca bien),
+    /// nguoi dung van o trang login, trang inventory khong bao gio xuat hien.
+    /// Neu dung wait mac dinh (10s) hoac de nem exception, ca test DDT se bi cham
+    /// va bao loi Error ngoai y muon thay vi tra ve ket qua false de Assert.That dung ky vong.
     /// </summary>
     public bool DaHienThi()
     {
-        return driver.Url.Contains("inventory.html") && CoHienThi(vungChuaSanPham);
+        if (!driver.Url.Contains("inventory.html"))
+        {
+            return false;
+        }
+
+        try
+        {
+            var shortWait = new WebDriverWait(driver, TimeSpan.FromSeconds(3));
+            return shortWait.Until(d =>
+            {
+                var elements = d.FindElements(vungChuaSanPham);
+                return elements.Count > 0 && elements[0].Displayed;
+            });
+        }
+        catch (WebDriverTimeoutException)
+        {
+            return false;
+        }
     }
 
     /// <summary>

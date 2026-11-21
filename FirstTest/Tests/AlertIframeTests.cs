@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -6,12 +7,14 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class AlertIframeTests : BaseTest
 {
+    protected override string StartUrl => Config.TheInternetUrl;
+
     #region JavaScript Alerts Tests
 
     [Test]
     public void PartC_JsAlert_AcceptAndAssertResult()
     {
-        var alertsPage = new JavaScriptAlertsPage(driver);
+        var alertsPage = new JavaScriptAlertsPage(Driver);
         alertsPage.MoTrang().BamNutAlert();
 
         // Kiểm tra nội dung alert trước khi Accept
@@ -27,7 +30,7 @@ public class AlertIframeTests : BaseTest
     [Test]
     public void PartC_JsConfirm_DismissAndAssertResult()
     {
-        var alertsPage = new JavaScriptAlertsPage(driver);
+        var alertsPage = new JavaScriptAlertsPage(Driver);
         alertsPage.MoTrang().BamNutConfirm();
 
         // Kiểm tra nội dung alert trước khi Dismiss
@@ -43,7 +46,7 @@ public class AlertIframeTests : BaseTest
     [Test]
     public void PartC_JsPrompt_SendKeysAcceptAndAssertResult()
     {
-        var alertsPage = new JavaScriptAlertsPage(driver);
+        var alertsPage = new JavaScriptAlertsPage(Driver);
         alertsPage.MoTrang().BamNutPrompt();
 
         // Kiểm tra nội dung prompt trước khi nhập
@@ -64,7 +67,7 @@ public class AlertIframeTests : BaseTest
     [Test]
     public void PartC_TinyMceIframe_WriteTextAndSwitchBack()
     {
-        var iframePage = new IframePage(driver);
+        var iframePage = new IframePage(Driver);
         iframePage.MoTrang();
 
         string textToEnter = "Kiem thu tu dong voi Selenium WebDriver trong iFrame.";

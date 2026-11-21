@@ -1,10 +1,11 @@
+using FirstTests.Config;
 using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
 public class DynamicLoadingPage : BasePage
 {
-    private const string DuongDanUrl = "https://the-internet.herokuapp.com/dynamic_loading/2";
+    private static string DuongDanUrl => $"{ConfigReader.Current.TheInternetUrl.TrimEnd('/')}/dynamic_loading/2";
 
     private readonly By nutBatDau = By.CssSelector("#start button");
     private readonly By phanTuKetQua = By.Id("finish");
