@@ -1,0 +1,62 @@
+[
+  {
+    "Username": "standard_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap thanh cong voi tai khoan tieu chuan"
+  },
+  {
+    "Username": "problem_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap thanh cong voi tai khoan problem_user"
+  },
+  {
+    "Username": "locked_out_user",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Dang nhap that bai vi tai khoan bi khoa"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "wrong_password_123",
+    "ThanhCong": false,
+    "GhiChu": "Dang nhap that bai vi sai mat khau"
+  },
+  {
+    "Username": "user_khong_ton_tai",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Dang nhap that bai vi tai khoan khong ton tai"
+  },
+  {
+    "Username": "",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Ca bien: Username de trong"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "",
+    "ThanhCong": false,
+    "GhiChu": "Ca bien: Password de trong"
+  },
+  {
+    "Username": "",
+    "Password": "",
+    "ThanhCong": false,
+    "GhiChu": "Ca bien: Ca Username va Password deu de trong"
+  },
+  {
+    "Username": " standard_user ",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Ca bien: Username chua khoang trang thua o hai dau"
+  },
+  {
+    "Username": "' OR '1'='1' --",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Ca bien: Chuoi ky tu dac biet mo phong SQL Injection"
+  }
+]

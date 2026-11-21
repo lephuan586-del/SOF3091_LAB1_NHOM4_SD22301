@@ -1,4 +1,6 @@
+using System.Text.RegularExpressions;
 using FirstTests.Core;
+using FirstTests.Data;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -9,22 +11,36 @@ public class LoginTests : BaseTest
 {
     private LoginPage LoginPage => new LoginPage(Driver);
 
-    [Test]
-    public void Login_ValidUser_GoesToInventoryPage()
+    public static IEnumerable<TestCaseData> DuLieuDangNhap()
     {
-        var inventoryPage = LoginPage.MoTrang().DangNhap("standard_user", "secret_sauce");
+        var danhSach = UserTestData.DocTuFileJson();
+        for (int i = 0; i < danhSach.Count; i++)
+        {
+            var user = danhSach[i];
+            string safeUsername = string.IsNullOrWhiteSpace(user.Username)
+                ? "Rong"
+                : Regex.Replace(user.Username, @"[^a-zA-Z0-9_]+", "_");
 
-        Assert.That(Driver.Url, Does.Contain("inventory.html"));
+            if (safeUsername.Length > 20)
+            {
+                safeUsername = safeUsername.Substring(0, 20);
+            }
+
+            var testCase = new TestCaseData(user.Username, user.Password, user.ThanhCong, user.GhiChu)
+                .SetName($"DangNhap_{i + 1:00}_{safeUsername}")
+                .SetDescription(user.GhiChu);
+
+            yield return testCase;
+        }
     }
 
-    [Test]
-    public void Login_LockedOutUser_ShowsErrorMessage()
+    [TestCaseSource(nameof(DuLieuDangNhap))]
+    public void KiemThuDangNhap_DataDriven(string username, string password, bool thanhCong, string ghiChu)
     {
-        LoginPage.MoTrang().DangNhapKhongThanhCong("locked_out_user", "secret_sauce");
+        var inventoryPage = LoginPage.MoTrang().DangNhap(username, password);
 
-        Assert.That(LoginPage.CoThongBaoLoiHienThi(), Is.True);
-        Assert.That(LoginPage.LayThongBaoLoi(), Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
-        Assert.That(Driver.Url, Does.Not.Contain("inventory.html"));
+        Assert.That(inventoryPage.DaHienThi(), Is.EqualTo(thanhCong),
+            $"Dang nhap voi Username: '{username}' | Ghi chu: '{ghiChu}' - Ket qua khong khop voi ky vong ({thanhCong}).");
     }
 
     [Test]
