@@ -58,5 +58,11 @@
     "Password": "secret_sauce",
     "ThanhCong": false,
     "GhiChu": "Ca bien: Chuoi ky tu dac biet mo phong SQL Injection"
+  },
+  {
+    "Username": "visual_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap thanh cong voi visual_user"
   }
 ]
