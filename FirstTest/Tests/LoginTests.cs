@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -6,38 +7,30 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class LoginTests : BaseTest
 {
-    private LoginPage loginPage = null!;
-
-    [SetUp]
-    public override void Setup()
-    {
-        base.Setup();
-        loginPage = new LoginPage(driver);
-        loginPage.MoTrang();
-    }
+    private LoginPage LoginPage => new LoginPage(Driver);
 
     [Test]
     public void Login_ValidUser_GoesToInventoryPage()
     {
-        var inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+        var inventoryPage = LoginPage.MoTrang().DangNhap("standard_user", "secret_sauce");
 
-        Assert.That(driver.Url, Does.Contain("inventory.html"));
+        Assert.That(Driver.Url, Does.Contain("inventory.html"));
     }
 
     [Test]
     public void Login_LockedOutUser_ShowsErrorMessage()
     {
-        loginPage.DangNhapKhongThanhCong("locked_out_user", "secret_sauce");
+        LoginPage.MoTrang().DangNhapKhongThanhCong("locked_out_user", "secret_sauce");
 
-        Assert.That(loginPage.CoThongBaoLoiHienThi(), Is.True);
-        Assert.That(loginPage.LayThongBaoLoi(), Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
-        Assert.That(driver.Url, Does.Not.Contain("inventory.html"));
+        Assert.That(LoginPage.CoThongBaoLoiHienThi(), Is.True);
+        Assert.That(LoginPage.LayThongBaoLoi(), Is.EqualTo("Epic sadface: Sorry, this user has been locked out."));
+        Assert.That(Driver.Url, Does.Not.Contain("inventory.html"));
     }
 
     [Test]
     public void CollectProducts_PrintsAndAssertsDetails()
     {
-        var inventoryPage = loginPage.DangNhap("standard_user", "secret_sauce");
+        var inventoryPage = LoginPage.MoTrang().DangNhap("standard_user", "secret_sauce");
 
         var danhSachSanPham = inventoryPage.LayDanhSachSanPham();
         Assert.That(danhSachSanPham.Count, Is.EqualTo(6), "Danh sách phải có đủ 6 sản phẩm.");

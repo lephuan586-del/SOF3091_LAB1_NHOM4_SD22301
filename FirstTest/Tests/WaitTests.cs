@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -6,11 +7,13 @@ namespace FirstTests.Tests;
 [TestFixture]
 public class WaitTests : BaseTest
 {
+    protected override string StartUrl => Config.TheInternetUrl;
+
     [Test]
     [Category("Demo")]
     public void PartA_KhongWait_Rot()
     {
-        var dynamicLoadingPage = new DynamicLoadingPage(driver);
+        var dynamicLoadingPage = new DynamicLoadingPage(Driver);
         dynamicLoadingPage.MoTrang().BamStart();
 
         // Không chờ: Đọc ngay lập tức khi DOM chưa kịp render -> Gây lỗi NoSuchElementException
@@ -22,7 +25,7 @@ public class WaitTests : BaseTest
     [Test]
     public void PartA_CoWait_Pass()
     {
-        var dynamicLoadingPage = new DynamicLoadingPage(driver);
+        var dynamicLoadingPage = new DynamicLoadingPage(Driver);
         dynamicLoadingPage.MoTrang().BamStart();
 
         // Có chờ: Explicit Wait đợi phần tử xuất hiện trong DOM

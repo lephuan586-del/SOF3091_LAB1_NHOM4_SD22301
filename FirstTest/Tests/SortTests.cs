@@ -1,3 +1,4 @@
+using FirstTests.Core;
 using FirstTests.Pages;
 using NUnit.Framework;
 
@@ -10,7 +11,7 @@ public class SortTests : BaseTest
     public void SortProducts_PriceLowToHigh_PricesAreSortedAscending()
     {
         // 1. Chuỗi hành vi liên hoàn (method chaining) từ đăng nhập đến sắp xếp và lấy danh sách giá
-        var actualPrices = new LoginPage(driver)
+        var actualPrices = new LoginPage(Driver)
             .MoTrang()
             .DangNhap("standard_user", "secret_sauce")
             .SapXep("lohi")
