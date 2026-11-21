@@ -666,3 +666,181 @@ Chỗ AI làm chưa tốt / tự quyết ngoài prompt:
 ThongBaoLoiDaHienThi() trả về bool nhưng không bao giờ trả false. Hàm gọi Tim(...), nên nếu thông báo lỗi không xuất hiện thì ném WebDriverTimeoutException sau 10 giây thay vì trả về false. Test vẫn rớt đúng (giống bản gốc, FindElement cũng ném lỗi khi không thấy), nhưng thông báo rớt là lỗi timeout chứ không phải kết quả Assert. Trong khi đó InventoryPage.DaHienThi() lại bắt exception và trả về false. Hai hàm cùng kiểu bool mà cách xử lý không nhất quán.
 AI tự thêm DangNhapKhongThanhCong và lớp SanPham, không có trong prompt. Quy ước 4 yêu cầu DangNhap trả về InventoryPage, nhưng test đăng nhập sai (locked_out_user) ở lại trang đăng nhập; nếu chỉ dùng DangNhap thì không gọi được LayThongBaoLoi() trên LoginPage. AI giải quyết bằng một hàm riêng trả về this. Hướng giải quyết hợp lý nhưng là quyết định của AI, người dùng phải tự hiểu và xác nhận.
 AI tự bỏ ImplicitWait = 5 giây ở Setup của test gốc. Prompt không yêu cầu việc này. Lý do hợp lý là không nên trộn Implicit và Explicit Wait, và Tim/TimTatCa đã có Explicit Wait thay thế (TimTatCa chờ đến khi có ít nhất 1 phần tử, giống cách FindElements của bản gốc đã chờ nhờ Implicit Wait). Nhưng đây vẫn là một thay đổi cơ chế chờ so với bản gốc, nên cần chạy lại test để chắc kết quả không đổi.
+
+
+# Lab 5: Xây dựng framework tự động hoá kiểm thử: Cấu trúc, Cấu hình & Data-Driven Testing
+
+- Môn: Kiểm thử nâng cao (SOF3091)
+- Site thử nghiệm: [saucedemo.com](https://www.saucedemo.com)
+- Nhóm: Nhóm 4 - Lớp SD22301
+
+---
+
+## 1. Cấu trúc Framework
+
+Dự án được tái cấu trúc theo mô hình phân tầng chuẩn công nghiệp cho Selenium C# / NUnit:
+
+```
+FirstTest/
+├── Config/
+│   ├── appsettings.json       # Tệp cấu hình tập trung (BaseUrl, Browser, Headless, Timeouts, kích thước cửa sổ)
+│   ├── TestConfig.cs          # Lớp POCO ánh xạ thuộc tính cấu hình
+│   └── ConfigReader.cs        # Trình đọc và cache cấu hình thông qua Lazy<TestConfig> từ AppContext.BaseDirectory
+├── Core/
+│   ├── DriverFactory.cs       # Nhà máy tạo WebDriver (Chrome, Firefox, Edge) hỗ trợ headless và thiết lập Options
+│   └── BaseTest.cs            # Lớp trừu tượng cơ sở quản lý vòng đời SetUp, TearDown và chụp ảnh khi thất bại
+├── Pages/
+│   ├── BasePage.cs            # Lớp cơ sở cho Page Objects với Explicit Wait (lấy timeout từ Config)
+│   ├── LoginPage.cs           # Page Object đại diện cho trang đăng nhập saucedemo
+│   ├── InventoryPage.cs       # Page Object cho trang sản phẩm với hàm DaHienThi() không ném TimeoutException
+│   ├── DynamicLoadingPage.cs  # Trang kiểm thử Dynamic Loading (Bài 3)
+│   ├── IframePage.cs          # Trang kiểm thử iFrame (Bài 3)
+│   ├── JavaScriptAlertsPage.cs# Trang kiểm thử JS Alerts (Bài 3)
+│   └── ExamplePage.cs         # Trang kiểm thử Example.com (Bài 1)
+├── Data/
+│   ├── users.json             # Bộ dữ liệu Data-Driven Testing (10 bộ gồm thuận, nghịch và ca biên)
+│   ├── UserTestData.cs        # Lớp ánh xạ và tiện ích đọc/deserialize JSON cho DDT
+│   └── ai_generated_users.json# Dữ liệu do AI sinh nguyên bản phục vụ thẩm định Phần E
+├── Utilities/
+│   └── ScreenshotHelper.cs    # Tiện ích chụp ảnh màn hình lỗi độc lập, lưu vào TestResults/Screenshots/
+└── Tests/
+    ├── LoginTests.cs          # Kiểm thử đăng nhập Data-Driven Testing (TestCaseSource) và gom sản phẩm
+    ├── SortTests.cs           # Kiểm thử sắp xếp sản phẩm (Bài 4 - Chaining)
+    ├── WaitTests.cs           # Kiểm thử Explicit Wait vs Không Wait (Bài 3)
+    ├── AlertIframeTests.cs    # Kiểm thử JS Alerts & iFrame (Bài 3)
+    ├── DemoFailTests.cs       # Ca kiểm thử cố ý lỗi để minh chứng chụp ảnh (Bài 3)
+    └── UnitTest1.cs           # Kiểm thử tiêu đề trang Example (Bài 1)
+```
+
+### Hướng dẫn thực thi và tuỳ biến
+- **Chạy toàn bộ kiểm thử:**
+  ```bash
+  dotnet test --logger "console;verbosity=normal"
+  ```
+- **Chuyển đổi trình duyệt hoặc chế độ Headless:**
+  Chỉnh sửa trong tệp `FirstTest/Config/appsettings.json`:
+  ```json
+  "Browser": "chrome",    // Các giá trị hợp lệ: "chrome", "firefox", "edge"
+  "Headless": false       // Đặt true để chạy ẩn ngầm không mở giao diện
+  ```
+- **Mở rộng dữ liệu kiểm thử (Data-Driven Testing):**
+  Chỉ cần thêm các đối tượng JSON vào tệp `FirstTest/Data/users.json` mà không cần biên dịch lại mã nguồn C#.
+
+---
+
+## 2. Minh chứng Phần B: Khả năng chuyển đổi Trình duyệt (DriverFactory)
+
+- Minh chứng chạy kiểm thử trên trình duyệt Google Chrome:  
+  ![Kiểm thử trên Chrome](screenshots/chrome.png)
+
+- Minh chứng chạy kiểm thử trên trình duyệt Mozilla Firefox:  
+  ![Kiểm thử trên Firefox](screenshots/firefox.png)
+
+---
+
+## 3. Minh chứng Phần D: Cơ chế Data-Driven Testing ("Thêm dữ liệu ≠ Sửa code")
+
+- Minh chứng số lượng ca kiểm thử ban đầu (10 ca DDT đăng nhập):  
+  ![Danh sách test trước khi thêm dữ liệu](screenshots/du-lieu-truoc.png)
+
+- Minh chứng số lượng ca kiểm thử tự động tăng thêm 1 ca sau khi thêm 1 bộ dữ liệu vào `Data/users.json` (không sửa file .cs):  
+  ![Danh sách test sau khi thêm dữ liệu](screenshots/du-lieu-sau.png)
+
+---
+
+## 4. Phần E — Thẩm định dữ liệu do AI sinh
+
+### 4.1. Công cụ AI sử dụng & Prompt nguyên văn
+- **Công cụ AI:** Google Gemini (Mô hình Gemini 2.5 Flash)
+- **Prompt nguyên văn:**
+  > "Hãy sinh 10 bộ dữ liệu test cho form đăng nhập của website saucedemo.com, trả về dạng mảng JSON, mỗi phần tử gồm đúng 4 khóa: Username, Password, ThanhCong (true/false), GhiChu. Gồm cả trường hợp hợp lệ, không hợp lệ và ca biên."
+
+### 4.2. Dữ liệu JSON nguyên văn do AI trả về
+Tệp được lưu trữ độc lập tại `FirstTest/Data/ai_generated_users.json`:
+```json
+[
+  {
+    "Username": "standard_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap thanh cong voi tai khoan tieu chuan"
+  },
+  {
+    "Username": "admin",
+    "Password": "admin123",
+    "ThanhCong": true,
+    "GhiChu": "Tai khoan quan tri vien he thong"
+  },
+  {
+    "Username": "locked_out_user",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "Tai khoan bi khoa truy cap"
+  },
+  {
+    "Username": "problem_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Tai khoan gap van de hien thi san pham"
+  },
+  {
+    "Username": "performance_glitch_user",
+    "Password": "secret_sauce",
+    "ThanhCong": true,
+    "GhiChu": "Tai khoan bi giat lag hieu nang"
+  },
+  {
+    "Username": "user@example.com",
+    "Password": "password123",
+    "ThanhCong": true,
+    "GhiChu": "Dang nhap bang dia chi email tieu chuan"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "wrong_password",
+    "ThanhCong": false,
+    "GhiChu": "Sai mat khau tai khoan hop le"
+  },
+  {
+    "Username": "",
+    "Password": "secret_sauce",
+    "ThanhCong": false,
+    "GhiChu": "De trong ten dang nhap"
+  },
+  {
+    "Username": "standard_user",
+    "Password": "",
+    "ThanhCong": false,
+    "GhiChu": "De trong mat khau"
+  },
+  {
+    "Username": "test_user_not_exist",
+    "Password": "test_password",
+    "ThanhCong": false,
+    "GhiChu": "Tai khoan nguoi dung khong ton tai"
+  }
+]
+```
+
+### 4.3. Bảng đối chiếu Thẩm định Thực tế (10/10 bộ)
+
+Quá trình thẩm định được thực hiện bằng cách khởi chạy tự động hóa kiểm thử thật trên `saucedemo.com`:
+
+| STT | Username | Password | Kỳ vọng AI | Kết quả Thực tế | Kết luận | Lý do chi tiết |
+|:---:|:---|:---|:---:|:---:|:---:|:---|
+| 1 | `standard_user` | `secret_sauce` | `true` | `true` | **Dùng được** | Đúng tài khoản chuẩn do saucedemo cung cấp. Đăng nhập thành công vào `inventory.html`. |
+| 2 | `admin` | `admin123` | `true` | `false` | **KHÔNG dùng được** | AI suy diễn theo quán tính các hệ thống web thông thường. Trang saucedemo không hỗ trợ tài khoản `admin/admin123`, hệ thống trả về thông báo lỗi khớp tài khoản. |
+| 3 | `locked_out_user` | `secret_sauce` | `false` | `false` | **Dùng được** | Tài khoản bị khóa đúng thực tế nghiệp vụ của saucedemo. Báo lỗi `Epic sadface: Sorry, this user has been locked out.` |
+| 4 | `problem_user` | `secret_sauce` | `true` | `true` | **Dùng được** | Tài khoản demo hợp lệ, đăng nhập thành công vào inventory (gặp lỗi hiển thị ảnh sản phẩm đúng kịch bản). |
+| 5 | `performance_glitch_user` | `secret_sauce` | `true` | `true` | **Dùng được** | Đăng nhập thành công vào trang inventory (tải trang chậm có độ trễ giả lập). |
+| 6 | `user@example.com` | `password123` | `true` | `false` | **KHÔNG dùng được** | AI ảo tưởng hệ thống saucedemo có tính năng đăng nhập bằng email hoặc có tài khoản mẫu dạng email. Thực tế saucedemo chỉ dùng username cố định, không có tính năng đăng ký/email. |
+| 7 | `standard_user` | `wrong_password` | `false` | `false` | **Dùng được** | Nhập sai mật khẩu, hệ thống chặn đăng nhập và hiển thị thông báo lỗi đúng kỳ vọng. |
+| 8 | `""` (rỗng) | `secret_sauce` | `false` | `false` | **Dùng được** | Ca biên: Tên đăng nhập để trống, saucedemo hiển thị `Epic sadface: Username is required`. |
+| 9 | `standard_user` | `""` (rỗng) | `false` | `false` | **Dùng được** | Ca biên: Mật khẩu để trống, saucedemo hiển thị `Epic sadface: Password is required`. |
+| 10 | `test_user_not_exist` | `test_password` | `false` | `false` | **Dùng được** | Tài khoản ngẫu nhiên không tồn tại trong hệ thống, bị từ chối đăng nhập đúng kỳ vọng. |
+
+### 4.4. Phân tích các bộ dữ liệu AI sinh không dùng được
+1. **Bộ số 2 (`admin` / `admin123` - Kỳ vọng: `true` / Thực tế: `false`):**  
+   - *Nguyên nhân:* AI tổng quát hóa (generalization) sai lầm dựa trên dữ liệu huấn luyện phổ biến của các trang quản trị web (thường có tài khoản mặc định `admin/admin123`). Trên saucedemo, mọi tài khoản đều được định nghĩa cứng, không tồn tại role hay username `admin`.
+2. **Bộ số 6 (`user@example.com` / `password123` - Kỳ vọng: `true` / Thực tế: `false`):**  
+   - *Nguyên nhân:* AI cho rằng form đăng nhập hỗ trợ định dạng Email và tự bịa ra một địa chỉ email hợp lệ. Trên thực tế, saucedemo không hỗ trợ xác thực qua Email và không cho phép đăng ký người dùng mới.
