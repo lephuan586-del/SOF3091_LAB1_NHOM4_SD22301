@@ -1,10 +1,11 @@
+using FirstTests.Config;
 using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
 public class LoginPage : BasePage
 {
-    private const string DuongDanUrl = "https://www.saucedemo.com";
+    private static string DuongDanUrl => ConfigReader.Current.BaseUrl;
 
     private readonly By truongTaiKhoan = By.Id("user-name");
     private readonly By truongMatKhau = By.Id("password");

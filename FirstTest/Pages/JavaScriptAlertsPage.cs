@@ -1,10 +1,11 @@
+using FirstTests.Config;
 using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
 public class JavaScriptAlertsPage : BasePage
 {
-    private const string DuongDanUrl = "https://the-internet.herokuapp.com/javascript_alerts";
+    private static string DuongDanUrl => $"{ConfigReader.Current.TheInternetUrl.TrimEnd('/')}/javascript_alerts";
 
     private readonly By nutJsAlert = By.CssSelector("button[onclick='jsAlert()']");
     private readonly By nutJsConfirm = By.CssSelector("button[onclick='jsConfirm()']");

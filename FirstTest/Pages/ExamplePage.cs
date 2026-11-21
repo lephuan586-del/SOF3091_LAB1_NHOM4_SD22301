@@ -1,10 +1,11 @@
+using FirstTests.Config;
 using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
 public class ExamplePage : BasePage
 {
-    private const string DuongDanUrl = "https://example.com";
+    private static string DuongDanUrl => ConfigReader.Current.ExampleUrl;
 
     public ExamplePage(IWebDriver driver) : base(driver)
     {

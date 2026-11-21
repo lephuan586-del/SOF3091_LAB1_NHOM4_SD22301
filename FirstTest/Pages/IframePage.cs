@@ -1,10 +1,11 @@
+using FirstTests.Config;
 using OpenQA.Selenium;
 
 namespace FirstTests.Pages;
 
 public class IframePage : BasePage
 {
-    private const string DuongDanUrl = "https://the-internet.herokuapp.com/iframe";
+    private static string DuongDanUrl => $"{ConfigReader.Current.TheInternetUrl.TrimEnd('/')}/iframe";
 
     private readonly By nutDongThongBao = By.CssSelector(".tox-notification__dismiss-button, button[aria-label='Close']");
     private readonly By khungIframe = By.Id("mce_0_ifr");
